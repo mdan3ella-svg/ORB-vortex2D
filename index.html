@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORB_DRIVE // VERTEX - 16:9 HD</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      user-select: none;
+      overflow: hidden;
+      background-color: #0F0F0F;
+    }
+    /* Hide scrollbars */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    /* CRT Scanline & vignette overlays */
+    .crt-overlay {
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(0,0,0,0) 65%, rgba(10,10,10,0.8) 100%);
+    }
+    /* Custom input styling for brutalist look */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: #111111;
+      height: 6px;
+      border: 1px solid #FF2233;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      background: #FF2233;
+      cursor: pointer;
+      border-radius: 0px;
+    }
+    /* 16:9 HD Container scaling constraints */
+    .hd-viewport {
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      max-width: 2048px;
+      min-width: 1280px;
+      max-height: 90vh;
+      box-shadow: 12px 12px 0px #FF2233;
+    }
+    @media (max-width: 1300px) {
+      .hd-viewport {
+        min-width: 100vw;
+        max-height: 100vh;
+        border-width: 0px;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body class="w-full h-screen relative flex items-center justify-center p-0 md:p-6 bg-[#0B0B0B]">
+
+  <!-- MAIN 16:9 HD VIEWPORT WRAPPER -->
+  <div id="canvasContainer" class="hd-viewport relative bg-[#121212] border-4 border-[#1A1A1A] overflow-hidden flex items-center justify-center">
+
+    <!-- GAME VIEWPORT CANVAS -->
+    <canvas id="gameCanvas" class="w-full h-full absolute inset-0 z-0"></canvas>
+
+    <!-- SCREEN SPACE CRT OVERLAY -->
+    <div class="crt-overlay absolute inset-0 z-10 pointer-events-none"></div>
+
+    <!-- BOOT / UTILITY CONSOLE LAYER (DARK MODE W/ RED ACCENTS) -->
+    <div id="bootScreen" class="absolute inset-0 z-50 bg-[#161616]/95 flex flex-col justify-between p-8 md:p-12 transition-opacity duration-700 border-4 border-[#FF2233]">
+      <!-- Top Bar -->
+      <div class="flex justify-between items-start border-b-2 border-[#FF2233] pb-4">
+        <div>
+          <div class="text-[10px] text-[#A3A3A3] tracking-widest uppercase font-bold">Vector Racing System // RED OVERLAY</div>
+          <h1 class="text-2xl md:text-4xl font-black tracking-tighter text-[#F5F5F5] mt-1">ORB_DRIVE // <span class="text-[#FF2233]">VERTEX_2D</span></h1>
+        </div>
+        <div class="text-right text-[10px] text-[#FF2233] hidden md:block">
+          <div>SYS_VER: 8.4.2 // PROTOTYPE SPEC</div>
+          <div>STABLE HIGH-DPI SUBGRID</div>
+        </div>
+      </div>
+
+      <!-- Main Configuration Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 my-auto">
+        <div class="lg:col-span-7 space-y-4">
+          <p class="text-xs md:text-sm text-[#CCCCCC] leading-relaxed max-w-xl font-medium">
+            Pilot your customized kinetic vector vessel across a polished 16:9 dark-key circuit. Transition between drive traction, slide-heavy hover states, and airborne glide modes.
+          </p>
+
+          <!-- Dynamic Preset Grid -->
+          <div class="space-y-2">
+            <div class="text-[10px] font-black uppercase tracking-wider text-[#FF2233]">// SELECT STANDARD VESSEL PRESETS</div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <button onclick="setVesselPreset('custom_orb')" class="border-2 border-[#FF2233] bg-[#1F1112] text-[#F5F5F5] hover:bg-[#FF2233] hover:text-[#111111] p-2.5 text-[11px] font-black text-left transition-all">
+                // ORB_VEHICLE-1
+                <div class="text-[8px] font-medium text-[#FF2233]/70 mt-1">Default custom sprite active.</div>
+              </button>
+              <button onclick="setVesselPreset('procedural_orb')" class="border-2 border-[#1A1A1A] bg-[#111111] text-[#A3A3A3] hover:bg-[#1A1A1A] hover:text-[#F5F5F5] p-2.5 text-[11px] font-black text-left transition-all">
+                // KINETIC_ORB
+                <div class="text-[8px] font-medium text-[#666] mt-1">Procedural spheroid core.</div>
+              </button>
+              <button onclick="setVesselPreset('cyber_glider')" class="border-2 border-[#1A1A1A] bg-[#111111] text-[#A3A3A3] hover:bg-[#1A1A1A] hover:text-[#F5F5F5] p-2.5 text-[11px] font-black text-left transition-all">
+                // COBALT_GLIDER
+                <div class="text-[8px] font-medium text-[#666] mt-1">Dual-wing aerodynamic chassis.</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Custom Sprite Upload Feature -->
+          <div class="border-2 border-dashed border-[#FF2233]/50 p-3 bg-[#111111] space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-black tracking-wider text-[#FF2233]">// IMPORT SYSTEM CAR IMAGE (.PNG, .JPG)</span>
+              <span class="text-[8px] text-[#A3A3A3] font-mono">RETINA RATIO PRESERVED</span>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 items-center">
+              <input type="file" id="vesselImageUpload" accept="image/*" class="hidden">
+              <label for="vesselImageUpload" class="px-3 py-1.5 bg-[#FF2233] text-[#111111] text-[10px] font-black hover:bg-[#E01E2E] cursor-pointer transition-all">
+                SELECT CUSTOM VESSEL IMAGE
+              </label>
+              <div id="uploadStatusText" class="text-[9px] text-[#A3A3A3] font-mono italic">Preloading default custom sprite: orb_vehicle-1.jpg</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls & Input Map -->
+        <div class="lg:col-span-5 border-2 border-[#FF2233] bg-[#1A1112] p-4 space-y-3 shadow-[4px_4px_0px_#FF2233]">
+          <div class="text-[10px] text-[#FF2233] font-black uppercase tracking-wider border-b border-[#FF2233] pb-1.5">INPUT VECTOR CALIBRATION</div>
+          <div class="space-y-2 text-[10px]">
+            <div class="flex justify-between items-center">
+              <span class="text-[#CCCCCC] font-semibold">FORWARD THRUST</span>
+              <span class="px-1.5 py-0.5 bg-[#FF2233] text-[#111111] font-bold">[ W ] or [ Space ]</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-[#CCCCCC] font-semibold">HYPERSONIC WARP ZOOM</span>
+              <span class="px-1.5 py-0.5 bg-[#FF2233] text-[#111111] font-bold">[ Double Tap W ]</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-[#CCCCCC] font-semibold">YAW STEER (LATERAL)</span>
+              <span class="px-1.5 py-0.5 bg-[#FF2233] text-[#111111] font-bold">[ A ] / [ D ]</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-[#CCCCCC] font-semibold">HOVER DRIFT</span>
+              <span class="px-1.5 py-0.5 bg-[#FF2233] text-[#111111] font-bold">[ S ] or [ Shift ]</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-[#CCCCCC] font-semibold">GLIDE PITCH ROTATE</span>
+              <span class="px-1.5 py-0.5 bg-[#FF2233] text-[#111111] font-bold">[ Q ] / [ E ]</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Actions -->
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4 border-t-2 border-[#FF2233] pt-4">
+        <div class="text-[10px] text-[#A3A3A3] font-mono">
+          SYSTEM ACTIVE // CUSTOM VESSEL IMAGE LINK SECURED
+        </div>
+        <button id="btnStart" class="w-full sm:w-auto px-8 py-3.5 bg-[#FF2233] hover:bg-[#E01E2E] text-[#111111] font-black uppercase text-xs tracking-widest transition-all duration-150 flex items-center justify-center gap-2 shadow-[3px_3px_0px_#FFFFFF]">
+          LAUNCH SIMULATION
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- BLACK LINE TELEMETRY OVERLAY W/ CRIMSON HIGHLIGHTS -->
+    <div id="hud" class="absolute inset-0 z-30 pointer-events-none hidden flex-col justify-between p-6 select-none">
+      
+      <!-- Top Stats Row -->
+      <div class="flex justify-between items-start">
+        <div class="flex gap-4">
+          <div class="border-l-4 border-[#FF2233] pl-2.5">
+            <div class="text-[8px] text-[#A3A3A3] tracking-widest font-black">SYSTEM COGNITION</div>
+            <div class="text-[11px] font-black tracking-tight text-[#F5F5F5]">ORB_DRIVE_2D // ACTIVE</div>
+          </div>
+          <div class="border-l border-[#000000] pl-2.5 hidden md:block">
+            <div class="text-[8px] text-[#A3A3A3] tracking-widest font-black">RATIO COMPLIANT</div>
+            <div class="text-[11px] font-extrabold text-[#F5F5F5]">16:9 SCALABLE VECTOR</div>
+          </div>
+        </div>
+
+        <!-- Top Right - Core Status -->
+        <div class="text-right">
+          <div class="text-[8px] text-[#A3A3A3] tracking-widest font-bold">SPECTRAL COUPLING</div>
+          <div id="activeCoreText" class="text-[11px] font-black text-[#FF2233]">// RED_EMISSIVE</div>
+        </div>
+      </div>
+
+      <!-- Center Dynamic Brackets (Positioned dynamically in code) -->
+      <div id="dynamicTracker" class="absolute top-0 left-0 pointer-events-none transition-all duration-75 ease-out flex items-center justify-center" style="width: 140px; height: 140px; margin-left: -70px; margin-top: -70px;">
+        <!-- Clean 1px crosshair circle -->
+        <div class="absolute inset-0 border border-dashed border-[#000000]/50 rounded-full animate-[spin_40s_linear_infinite]"></div>
+        <!-- Symmetrical Left Bracket (Thin Black lines) -->
+        <div class="absolute left-0 top-[15px] bottom-[15px] w-2.5 border-l-2 border-t-2 border-b-2 border-[#000000]"></div>
+        <!-- Symmetrical Right Bracket (Thin Black lines) -->
+        <div class="absolute right-0 top-[15px] bottom-[15px] w-2.5 border-r-2 border-t-2 border-b-2 border-[#000000]"></div>
+        <!-- Center Targeting Node -->
+        <div class="w-1.5 h-1.5 bg-[#FF2233] rounded-none"></div>
+      </div>
+
+      <!-- Symmetrical flanking telemetry labels relative to dynamic tracker -->
+      <div id="telemetryLeft" class="absolute pointer-events-none hidden md:block text-left text-[10px] font-mono font-black transition-all duration-75">
+        <div class="text-[7px] text-[#A3A3A3] tracking-widest">G-FORCE</div>
+        <div id="hudGForce" class="text-[#F5F5F5]">1.00 G</div>
+        <div class="text-[7px] text-[#A3A3A3] tracking-widest mt-1.5">DRIVE STATE</div>
+        <div id="hudTraction" class="text-[#FF2233]">DRIVE_MAG</div>
+      </div>
+
+      <div id="telemetryRight" class="absolute pointer-events-none hidden md:block text-right text-[10px] font-mono font-black transition-all duration-75">
+        <div class="text-[7px] text-[#A3A3A3] tracking-widest">TORQUE</div>
+        <div id="hudTorque" class="text-[#F5F5F5]">450 Nm</div>
+        <div class="text-[7px] text-[#A3A3A3] tracking-widest mt-1.5">ALTITUDE</div>
+        <div id="hudPitch" class="text-[#FF2233]">0.0° ATT</div>
+      </div>
+
+      <!-- Bottom Dashboard Panel (Thin black border division) -->
+      <div class="mt-auto grid grid-cols-1 md:grid-cols-12 gap-4 items-end border-t-2 border-[#000000] pt-3">
+        <!-- Speed Counter -->
+        <div class="md:col-span-4 flex items-baseline gap-2">
+          <div class="text-[9px] text-[#A3A3A3] font-black uppercase tracking-wider border-r border-[#000000] pr-2">SPEED</div>
+          <div class="text-4xl md:text-5xl font-black tracking-tighter text-[#F5F5F5] font-mono" id="speedValue">000</div>
+          <div class="text-[10px] font-black text-[#A3A3A3] tracking-wider">KM/H</div>
+        </div>
+
+        <!-- Turbo Meter -->
+        <div class="md:col-span-4 space-y-1">
+          <div class="flex justify-between text-[9px] text-[#A3A3A3] font-black">
+            <span>WARP ZOOM CAPACITY</span>
+            <span id="turboStatusText" class="text-[#FF2233] font-extrabold text-[9px]">READY</span>
+          </div>
+          <div class="w-full h-2 bg-[#1A1A1A] border-2 border-[#000000] overflow-hidden relative">
+            <div id="turboFill" class="h-full bg-[#FF2233]" style="width: 100%;"></div>
+          </div>
+          <div class="flex justify-between text-[7px] text-[#A3A3A3] font-mono">
+            <span>0.00K_CRIT</span>
+            <span>1.00K_CRIT (MAX)</span>
+          </div>
+        </div>
+
+        <!-- State Label -->
+        <div class="md:col-span-4 flex flex-col items-end">
+          <div class="text-[8px] text-[#A3A3A3] tracking-widest font-black">LOCOMOTION LOOPS</div>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span id="locomotionDot" class="w-2.5 h-2.5 bg-[#FF2233] inline-block rounded-none animate-pulse"></span>
+            <span id="locomotionLabel" class="text-lg font-black tracking-tight uppercase text-[#F5F5F5]">DRIVE_MAG</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRAPHICS PROFILE & SPRITE CALIBRATION SETTINGS (Left dock) -->
+    <div id="calibrationDock" class="absolute top-16 left-6 z-40 hidden flex flex-col gap-2.5 w-60 bg-[#161616]/95 border-2 border-[#000000] p-3 shadow-[4px_4px_0px_#FF2233]">
+      <div class="text-[10px] font-black border-b border-[#000000] pb-1 uppercase tracking-wider flex justify-between items-center text-[#F5F5F5]">
+        <span>Vessel Calibration</span>
+        <span class="text-[7px] text-[#FF2233] font-mono">Live Sync</span>
+      </div>
+
+      <!-- Active Core Selector -->
+      <div class="space-y-1">
+        <label class="text-[8px] font-black text-[#A3A3A3] block">SPECTRAL ENERGY SYSTEM</label>
+        <button id="btnChangeCore" class="w-full text-center py-1 bg-[#1A1A1A] text-[#FF2233] border border-[#FF2233]/40 text-[9px] font-black hover:bg-[#FF2233] hover:text-[#111111] transition-all uppercase flex items-center justify-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#FF2233]" id="coreDot"></span>
+          CYCLE SPECTRUM (C)
+        </button>
+      </div>
+
+      <!-- Calibration sliders for loaded image alignment -->
+      <div class="space-y-1.5 border-t border-[#000000] pt-1.5" id="vesselCalibrateControls">
+        <div class="text-[8px] font-black text-[#A3A3A3] flex justify-between">
+          <span>IMAGE DRAW SCALE</span>
+          <span id="valScale" class="font-mono text-[#FF2233]">1.6x</span>
+        </div>
+        <input type="range" id="sliderScale" min="0.5" max="3.0" step="0.1" value="1.6" class="w-full">
+
+        <div class="text-[8px] font-black text-[#A3A3A3] flex justify-between">
+          <span>ROTATION ANGLE OFFSET</span>
+          <span id="valRot" class="font-mono text-[#FF2233]">0°</span>
+        </div>
+        <input type="range" id="sliderRot" min="-180" max="180" step="5" value="0" class="w-full">
+
+        <div class="text-[8px] font-black text-[#A3A3A3] flex justify-between">
+          <span>Y-OFFSET (THRUST ALIGN)</span>
+          <span id="valYOff" class="font-mono text-[#FF2233]">0px</span>
+        </div>
+        <input type="range" id="sliderYOff" min="-40" max="40" step="1" value="0" class="w-full">
+      </div>
+
+      <div class="border-t border-[#000000] pt-2 flex justify-between gap-2">
+        <button id="btnReset" class="w-1/2 py-1 bg-[#1A1A1A] border border-[#FF2233]/30 text-[#FF2233] text-[8px] font-black hover:bg-[#FF2233] hover:text-[#111111] transition-all">
+          RESET POS
+        </button>
+        <button onclick="clearCustomImage()" class="w-1/2 py-1 bg-[#1A1A1A] border border-[#FF2233]/30 text-[#FF2233] text-[8px] font-black hover:bg-[#FF0055] hover:text-[#F5F5F5] transition-all">
+          CLEAR IMAGE
+        </button>
+      </div>
+    </div>
+
+    <!-- NOTIFICATION CONTAINER -->
+    <div id="notifyToast" class="absolute top-16 left-1/2 -translate-x-1/2 z-40 bg-[#161616] border-2 border-[#FF2233] text-[#F5F5F5] px-4 py-2 text-[10px] font-black tracking-wider opacity-0 transition-opacity duration-300 pointer-events-none">
+      ALERT // CHASSIS COUPLING CALIBRATED
+    </div>
+
+    <!-- AUDIO CONTROL BUTTON -->
+    <div class="absolute top-6 left-6 z-40 hidden md:block">
+      <button id="btnAudioToggle" class="px-2 py-1.5 bg-[#161616]/90 border border-[#000000] text-[9px] font-black tracking-wider text-[#FF2233] hover:bg-[#FF2233] hover:text-white transition-all uppercase">
+        AUDIO [OFF]
+      </button>
+    </div>
+
+  </div>
+
+  <!-- MAIN SCRIPT MODULE -->
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // UI Tracking States
+    let gameStarted = false;
+    let driveMode = 'DRIVE_MAG'; // DRIVE_MAG, HOVER_DRIFT, GLIDE, TURBO_ZOOM
+    let speed = 0;
+    let maxSpeedBase = 165;
+    let maxSpeedTurbo = 320;
+    let turboCharge = 100.0;
+    let activeCoreIdx = 0;
+
+    const CORE_SPECTRUMS = [
+      { name: 'RED_EMISSIVE', hex: '#FF2233', light: '#ff2233' },
+      { name: 'COBALT_EMISSIVE', hex: '#00F0FF', light: '#00f0ff' },
+      { name: 'LIME_EMISSIVE', hex: '#00FF66', light: '#00ff66' },
+      { name: 'AMBER_EMISSIVE', hex: '#FF9900', light: '#ff9900' }
+    ];
+
+    // Vessel Representation States
+    let activePreset = 'custom_orb'; // Starts with the uploaded custom asset
+    let customImageLoaded = false;
+    let customImageObj = new Image();
+
+    // Calibration offsets adjustable by sliders
+    let configScale = 1.6;
+    let configRotationOffset = 0; // in degrees
+    let configYOffset = 0; // vertical shift
+
+    // Physics Engine Properties
+    const player = {
+      x: 200,
+      y: 200,
+      vx: 0,
+      vy: 0,
+      heading: 0, // direction facing (radians)
+      speed: 0,
+      slideAngle: 0, // for hover-drifting vector offsets
+      altitude: 0, // glide height (0 to 1)
+      pitch: 0, // Q/E glide tilt rate
+      width: 48,
+      height: 32
+    };
+
+    // Camera follow mechanics
+    const camera = {
+      x: 0,
+      y: 0,
+      zoom: 1.0,
+      shake: 0
+    };
+
+    // Particles & Spline tracking
+    let trailParticles = [];
+    let speedVectors = [];
+    let trackSplinePoints = [];
+    let driveTrackLeft = [];
+    let driveTrackRight = [];
+
+    // Controller parameters
+    const keys = { w: false, s: false, a: false, d: false, q: false, e: false, shift: false };
+    let lastWPress = 0;
+    let doubleTapW = false;
+
+    // Audio elements
+    let audioCtx = null;
+    let engineOsc = null;
+    let engineGain = null;
+    let audioActive = false;
+    let engineOscillatorFilter = null;
+
+    // Pre-populate high-resolution procedural paths for the track spline
+    function generateDynamicTrackSpline() {
+      // Beautifully twisted racing circuit path scaled for 16:9 boundary systems
+      const basePoints = [
+        {x: 200, y: 200},
+        {x: 1400, y: 150},
+        {x: 2400, y: 300},
+        {x: 2600, y: 1100},
+        {x: 1900, y: 1500},
+        {x: 2100, y: 2200},
+        {x: 1300, y: 2600},
+        {x: 400, y: 2200},
+        {x: 800, y: 1300},
+        {x: 100, y: 900}
+      ];
+
+      trackSplinePoints = [];
+      const steps = 1200;
+      
+      // Catmull-Rom spline formulation in 2D
+      for (let i = 0; i < basePoints.length; i++) {
+        const p0 = basePoints[(i - 1 + basePoints.length) % basePoints.length];
+        const p1 = basePoints[i];
+        const p2 = basePoints[(i + 1) % basePoints.length];
+        const p3 = basePoints[(i + 2) % basePoints.length];
+
+        for (let t = 0; t < 1; t += basePoints.length / steps) {
+          const t2 = t * t;
+          const t3 = t2 * t;
+
+          const x = 0.5 * ((2 * p1.x) +
+            (-p0.x + p2.x) * t +
+            (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+            (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+
+          const y = 0.5 * ((2 * p1.y) +
+            (-p0.y + p2.y) * t +
+            (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+            (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+
+          trackSplinePoints.push({x, y});
+        }
+      }
+
+      // Build parallel track borders
+      const halfWidth = 95; // Track Width
+      driveTrackLeft = [];
+      driveTrackRight = [];
+
+      for (let i = 0; i < trackSplinePoints.length; i++) {
+        const curr = trackSplinePoints[i];
+        const next = trackSplinePoints[(i + 1) % trackSplinePoints.length];
+        
+        const dx = next.x - curr.x;
+        const dy = next.y - curr.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        
+        const nx = -dy / len;
+        const ny = dx / len;
+
+        driveTrackLeft.push({x: curr.x + nx * halfWidth, y: curr.y + ny * halfWidth});
+        driveTrackRight.push({x: curr.x - nx * halfWidth, y: curr.y - ny * halfWidth});
+      }
+    }
+
+    // Load initial custom sprite automatically
+    function preloadDefaultSprite() {
+      customImageObj.src = 'orb_vehicle-1.jpg';
+      customImageObj.onload = function() {
+        customImageLoaded = true;
+        activePreset = 'custom_orb';
+        const uploadStatusText = document.getElementById('uploadStatusText');
+        if (uploadStatusText) {
+          uploadStatusText.innerText = "Default: orb_vehicle-1.jpg active";
+        }
+      };
+      customImageObj.onerror = function() {
+        console.warn("Local default 'orb_vehicle-1.jpg' not found. Keeping file uploader ready.");
+        // We will keep activePreset to 'procedural_orb' if image is missing to prevent crash
+        activePreset = 'procedural_orb';
+      };
+    }
+
+    // Interactive custom upload logic
+    const uploadInput = document.getElementById('vesselImageUpload');
+    if (uploadInput) {
+      uploadInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            customImageObj.src = event.target.result;
+            customImageObj.onload = function() {
+              customImageLoaded = true;
+              activePreset = 'custom_orb';
+              document.getElementById('uploadStatusText').innerText = `Loaded: "${file.name}"`;
+              showToast("CUSTOM CAR VESSEL COUPLED!");
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    function setVesselPreset(presetType) {
+      if (presetType === 'custom_orb') {
+        if (customImageLoaded) {
+          activePreset = 'custom_orb';
+          showToast("VESSEL COUPLING: CUSTOM IMAGE");
+        } else {
+          preloadDefaultSprite();
+          showToast("RE-TRYING DEFAULT CUSTOM SPRITE...");
+        }
+      } else {
+        activePreset = presetType;
+        showToast(`VESSEL COUPLING: ${presetType.toUpperCase()}`);
+      }
+    }
+
+    function clearCustomImage() {
+      customImageLoaded = false;
+      activePreset = 'procedural_orb';
+      document.getElementById('uploadStatusText').innerText = "Cleared. Reverting to kinetic orb.";
+      showToast("CUSTOM GRAPHICS RESET");
+    }
+
+    // Input handlers
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'w' || e.code === 'Space') {
+        const now = performance.now();
+        if (now - lastWPress < 250) {
+          doubleTapW = true;
+          showToast("WARP ZOOM BURST CALIBRATED!");
+        }
+        lastWPress = now;
+        keys.w = true;
+      }
+      if (k === 's') keys.s = true;
+      if (k === 'a') keys.a = true;
+      if (k === 'd') keys.d = true;
+      if (k === 'q') keys.q = true;
+      if (k === 'e') keys.e = true;
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.shift = true;
+      
+      if (k === 'c') cycleCoreSpectrum();
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const k = e.key.toLowerCase();
+      if (k === 'w' || e.code === 'Space') keys.w = false;
+      if (k === 's') keys.s = false;
+      if (k === 'a') keys.a = false;
+      if (k === 'd') keys.d = false;
+      if (k === 'q') keys.q = false;
+      if (k === 'e') keys.e = false;
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.shift = false;
+    });
+
+    // Guarded Event Listener setups
+    const btnChangeCore = document.getElementById('btnChangeCore');
+    if (btnChangeCore) btnChangeCore.addEventListener('click', cycleCoreSpectrum);
+
+    const btnReset = document.getElementById('btnReset');
+    if (btnReset) {
+      btnReset.addEventListener('click', () => { 
+        player.x = trackSplinePoints[0].x; 
+        player.y = trackSplinePoints[0].y; 
+        player.vx = 0; 
+        player.vy = 0; 
+        player.speed = 0; 
+      });
+    }
+
+    const btnAudioToggle = document.getElementById('btnAudioToggle');
+    if (btnAudioToggle) btnAudioToggle.addEventListener('click', toggleAudioOutput);
+
+    function cycleCoreSpectrum() {
+      activeCoreIdx = (activeCoreIdx + 1) % CORE_SPECTRUMS.length;
+      const core = CORE_SPECTRUMS[activeCoreIdx];
+      document.getElementById('activeCoreText').innerText = `// ${core.name}`;
+      document.getElementById('coreDot').style.backgroundColor = core.light;
+      showToast(`SPECTRAL ADAPTATION: ${core.name}`);
+    }
+
+    function toggleAudioOutput() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        engineOsc = audioCtx.createOscillator();
+        engineGain = audioCtx.createGain();
+
+        engineOsc.type = 'sawtooth';
+        engineOscillatorFilter = audioCtx.createBiquadFilter();
+        engineOscillatorFilter.type = 'lowpass';
+        engineOscillatorFilter.frequency.setValueAtTime(140, audioCtx.currentTime);
+
+        engineOsc.frequency.setValueAtTime(65, audioCtx.currentTime);
+        engineOsc.connect(engineOscillatorFilter);
+        engineOscillatorFilter.connect(engineGain);
+        engineGain.connect(audioCtx.destination);
+        engineGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+        engineOsc.start();
+      }
+
+      audioActive = !audioActive;
+      const btn = document.getElementById('btnAudioToggle');
+      if (btn) {
+        btn.innerText = audioActive ? "AUDIO [ON]" : "AUDIO [OFF]";
+        btn.style.backgroundColor = audioActive ? "#FF2233" : "#161616";
+        btn.style.color = audioActive ? "#111111" : "#FF2233";
+      }
+    }
+
+    function updateAudioSynth() {
+      if (!audioActive || !engineGain) return;
+      const pitchRatio = player.speed / maxSpeedTurbo;
+      const targetFrequency = 50 + pitchRatio * 180;
+      engineOsc.frequency.setValueAtTime(targetFrequency, audioCtx.currentTime);
+      const targetGain = 0.01 + pitchRatio * 0.08;
+      engineGain.gain.setValueAtTime(targetGain, audioCtx.currentTime);
+    }
+
+    // Setup interactive calibration sliders dynamically
+    const sliderScaleEl = document.getElementById('sliderScale');
+    if (sliderScaleEl) {
+      sliderScaleEl.addEventListener('input', (e) => {
+        configScale = parseFloat(e.target.value);
+        document.getElementById('valScale').innerText = `${configScale}x`;
+      });
+    }
+
+    const sliderRotEl = document.getElementById('sliderRot');
+    if (sliderRotEl) {
+      sliderRotEl.addEventListener('input', (e) => {
+        configRotationOffset = parseInt(e.target.value);
+        document.getElementById('valRot').innerText = `${configRotationOffset}°`;
+      });
+    }
+
+    const sliderYOffEl = document.getElementById('sliderYOff');
+    if (sliderYOffEl) {
+      sliderYOffEl.addEventListener('input', (e) => {
+        configYOffset = parseInt(e.target.value);
+        document.getElementById('valYOff').innerText = `${configYOffset}px`;
+      });
+    }
+
+    // Boot launch trigger
+    const btnStart = document.getElementById('btnStart');
+    if (btnStart) {
+      btnStart.addEventListener('click', () => {
+        document.getElementById('bootScreen').classList.add('opacity-0');
+        setTimeout(() => {
+          document.getElementById('bootScreen').style.display = 'none';
+          document.getElementById('hud').style.display = 'flex';
+          document.getElementById('calibrationDock').style.display = 'flex';
+          gameStarted = true;
+        }, 700);
+      });
+    }
+
+    // Handle track distance checking
+    function checkOffTrack(px, py) {
+      let minDistance = Infinity;
+      for (let i = 0; i < trackSplinePoints.length; i += 2) {
+        const pt = trackSplinePoints[i];
+        const dx = px - pt.x;
+        const dy = py - pt.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < minDistance) {
+          minDistance = dist;
+        }
+      }
+      return minDistance > 95; // Outside boundary range
+    }
+
+    // Populate speed line visual particles
+    function initSpeedLines() {
+      speedVectors = [];
+      for (let i = 0; i < 40; i++) {
+        speedVectors.push({
+          x: Math.random() * 1920,
+          y: Math.random() * 1080,
+          len: 12 + Math.random() * 28,
+          speed: 10 + Math.random() * 14
+        });
+      }
+    }
+
+    // Draw grid lines representing structural concrete slabs
+    function drawConcreteGrid(camX, camY, viewWidth, viewHeight) {
+      ctx.strokeStyle = "rgba(0,0,0,0.18)";
+      ctx.lineWidth = 1;
+      const gridSize = 100;
+      
+      const startX = Math.floor((camX - viewWidth / 2) / gridSize) * gridSize;
+      const endX = startX + viewWidth + gridSize * 2;
+      
+      const startY = Math.floor((camY - viewHeight / 2) / gridSize) * gridSize;
+      const endY = startY + viewHeight + gridSize * 2;
+
+      for (let x = startX; x < endX; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x - camX + viewWidth / 2, startY - camY + viewHeight / 2);
+        ctx.lineTo(x - camX + viewWidth / 2, endY - camY + viewHeight / 2);
+        ctx.stroke();
+      }
+
+      for (let y = startY; y < endY; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(startX - camX + viewWidth / 2, y - camY + viewHeight / 2);
+        ctx.lineTo(endX - camX + viewWidth / 2, y - camY + viewHeight / 2);
+        ctx.stroke();
+      }
+    }
+
+    // Vector operations and updates for state transitions
+    function updateStateAndPhysics(delta) {
+      if (!gameStarted) return;
+
+      const offTrack = checkOffTrack(player.x, player.y);
+
+      // Mode evaluation
+      if (keys.shift || keys.s) {
+        driveMode = 'HOVER_DRIFT';
+      } else if (doubleTapW && player.speed > 8) {
+        driveMode = 'TURBO_ZOOM';
+      } else if (player.altitude > 0) {
+        driveMode = 'GLIDE';
+      } else {
+        driveMode = 'DRIVE_MAG';
+      }
+
+      // Handle Acceleration base rates
+      let accelRate = 4.5;
+      let targetMax = maxSpeedBase;
+
+      if (driveMode === 'TURBO_ZOOM') {
+        accelRate = 9.0;
+        targetMax = maxSpeedTurbo;
+        turboCharge -= delta * 32.0;
+        camera.shake = 6;
+        if (turboCharge < 3) {
+          doubleTapW = false;
+          driveMode = 'DRIVE_MAG';
+        }
+      } else {
+        turboCharge = Math.min(100.0, turboCharge + delta * 16.0);
+        camera.shake = offTrack ? 3 : 0;
+      }
+
+      if (keys.w) {
+        player.speed += accelRate;
+      } else {
+        player.speed -= 2.8; // coasting drag
+      }
+
+      // Track rough drag
+      if (offTrack) {
+        targetMax *= 0.50;
+        player.speed *= 0.95; // Decelerating on sand/rough surface
+        if (player.speed > 2 && Math.random() < 0.45) {
+          trailParticles.push({
+            x: player.x,
+            y: player.y,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 0.5) * 5,
+            size: 4 + Math.random() * 4,
+            opacity: 0.7,
+            color: '#3A3A3A' // Dark Concrete dust clouds
+          });
+        }
+      }
+
+      player.speed = Math.max(0, Math.min(targetMax, player.speed));
+
+      // Handle steering lateral torque
+      let turnRate = 0.058;
+      if (driveMode === 'HOVER_DRIFT') {
+        turnRate = 0.082; // sharper angling
+      }
+
+      if (keys.a) {
+        player.heading -= turnRate;
+      }
+      if (keys.d) {
+        player.heading += turnRate;
+      }
+
+      // Handle Q/E glide altitude pitch adjustments
+      if (driveMode === 'GLIDE') {
+        if (keys.q) player.pitch = Math.max(-1, player.pitch - 0.1);
+        else if (keys.e) player.pitch = Math.min(1, player.pitch + 0.1);
+        else player.pitch *= 0.95;
+      } else {
+        player.pitch = 0;
+      }
+
+      // Locomotion vector friction application
+      if (driveMode === 'HOVER_DRIFT') {
+        player.slideAngle = player.slideAngle * 0.90 + player.heading * 0.10;
+        player.vx = Math.sin(player.slideAngle) * player.speed * 0.125;
+        player.vy = -Math.cos(player.slideAngle) * player.speed * 0.125;
+
+        // Visual drift sparks matching Core Emission profiles
+        if (Math.random() < 0.8) {
+          trailParticles.push({
+            x: player.x - Math.sin(player.heading) * 12,
+            y: player.y + Math.cos(player.heading) * 12,
+            vx: (Math.random() - 0.5) * 7 - player.vx * 0.15,
+            vy: (Math.random() - 0.5) * 7 - player.vy * 0.15,
+            size: 2 + Math.random() * 2.5,
+            opacity: 1.0,
+            color: CORE_SPECTRUMS[activeCoreIdx].light
+          });
+        }
+      } else {
+        player.slideAngle = player.heading;
+        player.vx = Math.sin(player.heading) * player.speed * 0.125;
+        player.vy = -Math.cos(player.heading) * player.speed * 0.125;
+      }
+
+      // Jump ramp detection trigger
+      const isOverRamp = (player.x > 1150 && player.x < 1350 && player.y > 100 && player.y < 250);
+      if (isOverRamp && player.speed > 95 && player.altitude === 0) {
+        player.altitude = 1.0;
+        showToast("GLIDE DEPLOYED // VECTOR ALTITUDE BOOSTED");
+      }
+
+      if (player.altitude > 0) {
+        player.altitude -= 0.018; // Altitude decay
+        if (player.altitude < 0) player.altitude = 0;
+      }
+
+      // Move player coordinates
+      player.x += player.vx;
+      player.y += player.vy;
+
+      // Particle dynamic updates
+      for (let i = trailParticles.length - 1; i >= 0; i--) {
+        const p = trailParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.opacity -= 0.025;
+        if (p.opacity <= 0) {
+          trailParticles.splice(i, 1);
+        }
+      }
+    }
+
+    // Centered Canvas Scaling with Device Pixel Ratio Alignment
+    let viewWidth = 1920;
+    let viewHeight = 1080;
+
+    function resizeCanvas() {
+      const rect = document.getElementById('canvasContainer').getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Store actual rendering size in viewport system
+      viewWidth = rect.width;
+      viewHeight = rect.height;
+
+      canvas.style.width = viewWidth + 'px';
+      canvas.style.height = viewHeight + 'px';
+
+      // Set internal backbuffer parameters scaled by device pixel ratio
+      canvas.width = viewWidth * dpr;
+      canvas.height = viewHeight * dpr;
+      
+      ctx.resetTransform();
+      ctx.scale(dpr, dpr);
+    }
+
+    // Render elements inside camera matrix space
+    function drawSimulation() {
+      // Clear and render background dark-key color
+      ctx.fillStyle = "#121212";
+      ctx.fillRect(0, 0, viewWidth, viewHeight);
+
+      // Camera focal interpolation tracking the player
+      const targetCamX = player.x;
+      const targetCamY = player.y;
+      camera.x = camera.x * 0.9 + targetCamX * 0.1;
+      camera.y = camera.y * 0.9 + targetCamY * 0.1;
+
+      // Apply screen shake offset values
+      const shakeX = (Math.random() - 0.5) * camera.shake;
+      const shakeY = (Math.random() - 0.5) * camera.shake;
+
+      ctx.save();
+      // Center camera within 16:9 view width/height
+      ctx.translate(viewWidth / 2 + shakeX, viewHeight / 2 + shakeY);
+      
+      // Dynamic zoom-out relative to fast speed
+      const targetZoom = 1.0 - (player.speed / maxSpeedTurbo) * 0.3;
+      camera.zoom = camera.zoom * 0.95 + targetZoom * 0.05;
+      ctx.scale(camera.zoom, camera.zoom);
+
+      const camX = camera.x;
+      const camY = camera.y;
+
+      // Draw parallel concrete visual slab grid
+      drawConcreteGrid(camX, camY, viewWidth, viewHeight);
+
+      // DRAW CIRCUIT TRACK (Dark-key concrete shoulders)
+      ctx.lineWidth = 190; // Full Track width
+      ctx.strokeStyle = "#1C1C1C";
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      for (let i = 0; i < trackSplinePoints.length; i++) {
+        const pt = trackSplinePoints[i];
+        if (i === 0) ctx.moveTo(pt.x - camX, pt.y - camY);
+        else ctx.lineTo(pt.x - camX, pt.y - camY);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Draw darker inner asphalt concrete track centerline
+      ctx.lineWidth = 150;
+      ctx.strokeStyle = "#242424";
+      ctx.beginPath();
+      for (let i = 0; i < trackSplinePoints.length; i++) {
+        const pt = trackSplinePoints[i];
+        if (i === 0) ctx.moveTo(pt.x - camX, pt.y - camY);
+        else ctx.lineTo(pt.x - camX, pt.y - camY);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Draw curbs alongside the track with alternating brutalist patterns
+      ctx.lineWidth = 10;
+      ctx.strokeStyle = "#0A0A0A";
+      
+      // Left curbs
+      ctx.beginPath();
+      for (let i = 0; i < driveTrackLeft.length; i++) {
+        const pt = driveTrackLeft[i];
+        if (i === 0) ctx.moveTo(pt.x - camX, pt.y - camY);
+        else ctx.lineTo(pt.x - camX, pt.y - camY);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Right curbs
+      ctx.beginPath();
+      for (let i = 0; i < driveTrackRight.length; i++) {
+        const pt = driveTrackRight[i];
+        if (i === 0) ctx.moveTo(pt.x - camX, pt.y - camY);
+        else ctx.lineTo(pt.x - camX, pt.y - camY);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Alternating checker pattern overlays on curves to denote kerbs (Crimson & White)
+      for (let i = 0; i < driveTrackLeft.length; i += 12) {
+        ctx.fillStyle = i % 24 === 0 ? "#FF2233" : "#FFFFFF";
+        ctx.beginPath();
+        ctx.arc(driveTrackLeft[i].x - camX, driveTrackLeft[i].y - camY, 6, 0, Math.PI * 2);
+        ctx.arc(driveTrackRight[i].x - camX, driveTrackRight[i].y - camY, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Draw a checkered start/finish vector line at track segment 0
+      ctx.save();
+      const startPt = trackSplinePoints[0];
+      const startTangent = trackSplinePoints[1].x - startPt.x;
+      const startAngle = Math.atan2(trackSplinePoints[1].y - startPt.y, startTangent);
+      ctx.translate(startPt.x - camX, startPt.y - camY);
+      ctx.rotate(startAngle + Math.PI / 2);
+      ctx.fillStyle = "#FF2233";
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = "#000000";
+      // Draw 15px alternating Crimson and Black segments across the track
+      for (let w = -75; w < 75; w += 15) {
+        ctx.fillStyle = (w / 15) % 2 === 0 ? "#FF2233" : "#121212";
+        ctx.fillRect(w, -10, 15, 20);
+      }
+      ctx.restore();
+
+      // Draw jump ramp indicator on spline with 2.5D drop shadow height
+      ctx.save();
+      ctx.translate(1250 - camX, 175 - camY);
+      
+      // Ramp platform shadow
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
+      ctx.fillRect(-115, -25, 230, 70);
+
+      // Ramp primary board (Dark gray brutalist design)
+      ctx.fillStyle = "#1A1A1A";
+      ctx.strokeStyle = "#FF2233";
+      ctx.lineWidth = 3;
+      ctx.fillRect(-120, -30, 240, 60);
+      ctx.strokeRect(-120, -30, 240, 60);
+
+      // Warning hazard stripes along the ramp (Vibrant Red)
+      ctx.strokeStyle = "#FF2233";
+      ctx.lineWidth = 5;
+      for (let rx = -110; rx < 120; rx += 20) {
+        ctx.beginPath();
+        ctx.moveTo(rx - 8, -30);
+        ctx.lineTo(rx + 8, 30);
+        ctx.stroke();
+      }
+
+      // Label overlay
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 13px 'JetBrains Mono'";
+      ctx.textAlign = "center";
+      ctx.fillText(">>> GLIDE JUMP VECTOR >>>", 0, 5);
+      ctx.restore();
+
+      // DRAW TRAILS
+      for (const p of trailParticles) {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.opacity;
+        ctx.beginPath();
+        ctx.arc(p.x - camX, p.y - camY, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1.0;
+
+      // DRAW VEHICLE SHADOW (Offset dependent on dynamic Glide Altitude)
+      const shadowOffset = 4 + player.altitude * 25;
+      const drawScale = (1.0 + player.altitude * 0.40) * configScale; // Scale up with elevation
+
+      ctx.save();
+      ctx.translate(player.x - camX + shadowOffset, player.y - camY + shadowOffset);
+      ctx.rotate(player.heading + (configRotationOffset * Math.PI / 180));
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.beginPath();
+      ctx.ellipse(0, configYOffset, player.width * 0.5 * drawScale, player.height * 0.5 * drawScale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // DRAW VESSEL WITH POLISHED CUSTOM CALIBRATIONS
+      ctx.save();
+      ctx.translate(player.x - camX, player.y - camY);
+      ctx.rotate(player.heading + (configRotationOffset * Math.PI / 180));
+
+      // Image Render or Fallbacks
+      if (customImageLoaded && (activePreset === 'custom_orb' || activePreset === 'custom')) {
+        ctx.drawImage(
+          customImageObj, 
+          -player.width * 0.5 * drawScale, 
+          -player.height * 0.5 * drawScale + configYOffset, 
+          player.width * drawScale, 
+          player.height * drawScale
+        );
+
+        // Circular tracking ring to indicate coupling
+        ctx.strokeStyle = CORE_SPECTRUMS[activeCoreIdx].light;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(0, configYOffset, player.height * 0.52 * drawScale, 0, Math.PI * 2);
+        ctx.stroke();
+
+      } else {
+        // Fallback: Code-Brutalist Procedural Presets
+        if (activePreset === 'cyber_glider') {
+          ctx.strokeStyle = "#FF2233";
+          ctx.fillStyle = "#1A1A1A";
+          ctx.lineWidth = 3.5;
+
+          ctx.beginPath();
+          ctx.moveTo(0, -24 * drawScale); 
+          ctx.lineTo(20 * drawScale, 14 * drawScale); 
+          ctx.lineTo(7 * drawScale, 10 * drawScale);
+          ctx.lineTo(0, 18 * drawScale); 
+          ctx.lineTo(-7 * drawScale, 10 * drawScale);
+          ctx.lineTo(-20 * drawScale, 14 * drawScale); 
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // High emissive wingtips
+          ctx.fillStyle = CORE_SPECTRUMS[activeCoreIdx].light;
+          ctx.beginPath();
+          ctx.arc(20 * drawScale, 14 * drawScale, 5, 0, Math.PI * 2);
+          ctx.arc(-20 * drawScale, 14 * drawScale, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+        } else if (activePreset === 'monolith') {
+          ctx.fillStyle = "#111111";
+          ctx.strokeStyle = "#FF2233";
+          ctx.lineWidth = 2.5;
+          ctx.fillRect(-16 * drawScale, -26 * drawScale, 32 * drawScale, 52 * drawScale);
+          ctx.strokeRect(-16 * drawScale, -26 * drawScale, 32 * drawScale, 52 * drawScale);
+
+          ctx.fillStyle = CORE_SPECTRUMS[activeCoreIdx].light;
+          ctx.fillRect(-4 * drawScale, -16 * drawScale, 8 * drawScale, 32 * drawScale);
+
+        } else {
+          // PROLATE ORB
+          ctx.strokeStyle = "#000000";
+          ctx.fillStyle = "#FF2233"; 
+          ctx.lineWidth = 3.5;
+
+          ctx.beginPath();
+          ctx.ellipse(0, 0, player.width * 0.46 * drawScale, player.height * 0.46 * drawScale, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Symmetrical high-gloss clearances
+          ctx.strokeStyle = "#FFFFFF";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, player.width * 0.48 * drawScale, player.height * 0.36 * drawScale, 0, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Emissive ring mapping
+          ctx.strokeStyle = CORE_SPECTRUMS[activeCoreIdx].light;
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.arc(0, 0, player.height * 0.30 * drawScale, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Thruster flame dynamics
+          if (keys.w) {
+            ctx.fillStyle = CORE_SPECTRUMS[activeCoreIdx].light;
+            ctx.beginPath();
+            ctx.moveTo(-6 * drawScale, 16 * drawScale);
+            ctx.lineTo(0, (26 + Math.random() * 16) * drawScale);
+            ctx.lineTo(6 * drawScale, 16 * drawScale);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+      }
+
+      ctx.restore();
+      ctx.restore(); // Restore camera matrix transforms
+
+      // SCREEN SPACE SPEED LINE EFFECTS FOR TURBO ZOOM
+      if (driveMode === 'TURBO_ZOOM') {
+        ctx.strokeStyle = "rgba(255, 34, 51, 0.28)";
+        ctx.lineWidth = 1;
+        for (const line of speedVectors) {
+          line.y += line.speed;
+          if (line.y > viewHeight) {
+            line.y = 0;
+            line.x = Math.random() * viewWidth;
+          }
+          ctx.beginPath();
+          ctx.moveTo(line.x, line.y);
+          ctx.lineTo(line.x, line.y + line.len);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Dynamic on-screen HUD rendering tied to player 16:9 coordinate space
+    function drawHUDOverlay() {
+      const speedStr = Math.floor(player.speed).toString().padStart(3, '0');
+      document.getElementById('speedValue').innerText = speedStr;
+      document.getElementById('turboFill').style.width = `${turboCharge}%`;
+      
+      const isCooldown = turboCharge < 5;
+      document.getElementById('turboStatusText').innerText = isCooldown ? "RECHARGING" : (driveMode === 'TURBO_ZOOM' ? "HYPERSONIC_ZOOM" : "READY");
+      document.getElementById('turboStatusText').style.color = isCooldown ? "#FF2233" : "#FFFFFF";
+
+      // HUD Text data binds
+      document.getElementById('hudGForce').innerText = `${(1.0 + (player.speed / maxSpeedBase) * 1.1).toFixed(2)} G`;
+      document.getElementById('hudTorque').innerText = `${Math.floor(450 + (player.speed / maxSpeedBase) * 150)} Nm`;
+      document.getElementById('hudPitch').innerText = `${(player.pitch * 45).toFixed(1)}° ATT`;
+      document.getElementById('hudTraction').innerText = driveMode;
+      document.getElementById('locomotionLabel').innerText = driveMode;
+
+      // Color spectrum accents dynamic swap based on active color
+      const accentColor = CORE_SPECTRUMS[activeCoreIdx].hex;
+      document.getElementById('activeCoreText').style.color = accentColor;
+      document.getElementById('locomotionDot').style.backgroundColor = accentColor;
+
+      // Project the dynamic tracking crosshairs symmetrically over the 2D player
+      const zoom = camera.zoom;
+      const screenX = (player.x - camera.x) * zoom + viewWidth / 2;
+      const screenY = (player.y - camera.y) * zoom + viewHeight / 2;
+
+      const dynamicTracker = document.getElementById('dynamicTracker');
+      dynamicTracker.style.left = `${screenX}px`;
+      dynamicTracker.style.top = `${screenY}px`;
+
+      // Position flanking telemetry blocks cleanly
+      const telemetryLeft = document.getElementById('telemetryLeft');
+      telemetryLeft.style.left = `${screenX - 110}px`;
+      telemetryLeft.style.top = `${screenY - 25}px`;
+
+      const telemetryRight = document.getElementById('telemetryRight');
+      telemetryRight.style.left = `${screenX + 60}px`;
+      telemetryRight.style.top = `${screenY - 25}px`;
+    }
+
+    // MAIN GAME INITIATION ENGINE
+    function initGame() {
+      resizeCanvas();
+      generateDynamicTrackSpline();
+      initSpeedLines();
+      preloadDefaultSprite();
+
+      // Put car on the starting track coordinate
+      player.x = trackSplinePoints[0].x;
+      player.y = trackSplinePoints[0].y;
+
+      window.addEventListener('resize', resizeCanvas);
+    }
+
+    function gameLoop() {
+      requestAnimationFrame(gameLoop);
+      const delta = 1 / 60; // constant physics step
+
+      updateStateAndPhysics(delta);
+      updateAudioSynth();
+      drawSimulation();
+      drawHUDOverlay();
+    }
+
+    window.onload = function() {
+      initGame();
+      gameLoop();
+    }
+  </script>
+</body>
+</html>
